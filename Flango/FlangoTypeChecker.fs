@@ -193,11 +193,30 @@ and applyArgsToFunction funType (argTypes: TypeExp list) =
             | otherwise -> 
                 return! error "Can only apply a value to a function"
     }
+and createFreshType funType map =
+    typeChecker {
+        match funType with         
+        | TypeOperator ("->",funTypeArgs) -> 
+                let! type1, m1 = createFreshType funTypeArgs.[0] map
+                let! type2, m2 = createFreshType funTypeArgs.[1] m1
+                return functionType type1 type2, m2
+        | TypeVar typeName ->
+            match Map.tryFind typeName map  with
+                | Some typeExp -> 
+                    return typeExp, map
+                | None ->  
+                    let! newType = newTypeVar()
+                    let m2 = Map.add typeName newType map  
+                    return newType, m2
+        | otherTypeExp -> 
+            return otherTypeExp, map
+    }
 and analyzeCallExp callee callArgList =    
     typeChecker {
         let! funNode = analyzeExp callee
-        let! callArgsWithType = map analyzeExp callArgList        
-        let! resultType = applyArgsToFunction funNode.Type (List.map (fun (x:ExpressionResult) -> x.Type) callArgsWithType)
+        let! callArgsWithType = map analyzeExp callArgList   
+        let! funType = createFreshType funNode.Type Map.empty 
+        let! resultType = applyArgsToFunction (fst funType) (List.map (fun (x:ExpressionResult) -> x.Type) callArgsWithType)
         return (Call (funNode, callArgsWithType), resultType)
     }
 and analyzeCondExp test ifTrue ifFalse = 
