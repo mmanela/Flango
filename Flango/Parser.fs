@@ -6,9 +6,12 @@ open System.Collections.Generic
 open Models
 open StateMonad
 
-// Parser states consists of 'a which is the return type of any given parser combination
-// and 'ex which is the user define type of the AST they are building
+// Parser states consists of 'a which is the return type of any given parser combinator
+// and 'ex which is the user defined type of the AST they are building
 type Parser<'a, 'ex> = StateMonad<InputState<'ex>,'a>
+
+// A symbol is the core component of the Pratt Parser. You define how the parsing works
+// by defining symbols for operators/tokens
 and Symbol<'ex> = 
     {
         name : string;
@@ -16,6 +19,9 @@ and Symbol<'ex> =
         nud : Token -> int -> Parser<'ex,'ex>;
         lbp : int;
     }
+
+// The state type for the parser. Maintains the list of input tokens, the current token,
+// the current symbol and the user defined mapping of tokens to symbols
 and InputState<'ex> = 
     { 
         tokens : seq<Token>;
