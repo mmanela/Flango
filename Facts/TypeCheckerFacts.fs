@@ -106,3 +106,17 @@ let Will_type_resolving_generic_function_type() =
     let (state,typ) = typeCheck code |> Option.get
     
     Assert.Equal("Integer",typ.ToString()) 
+
+
+[<Fact>]
+let Will_create_fresh_vars_for_bound_type_vars() =
+
+    let code = "
+    fun id x = x
+    let x = 5
+    id x
+    id"
+
+    let (state,typ) = typeCheck code |> Option.get
+    
+    Assert.Equal("'a->'a",typ.ToString()) 
